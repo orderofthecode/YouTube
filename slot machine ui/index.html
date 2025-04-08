@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casino OTP Verification</title>
+  <style>
+    :root {
+      --primary-color: #ffd700;
+      --secondary-color: #d4af37;
+      --background-color: #000000;
+      --slot-bg: #000;
+      --slot-border: #ffd700;
+      --success-color: #4caf50;
+      --error-color: #f44336;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background: var(--background-color);
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 600px;
+      padding: 30px;
+      border-radius: 15px;
+      background: rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color));
+      animation: shine 2s infinite linear;
+    }
+    
+    @keyframes shine {
+      from { background-position: 0; }
+      to { background-position: 600px; }
+    }
+    
+    .title {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 28px;
+      color: var(--primary-color);
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+    }
+    
+    .subtitle {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #ddd;
+      font-size: 16px;
+    }
+    
+    .otp-inputs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+    
+    .otp-inputs input {
+      width: 60px;
+      height: 70px;
+      font-size: 2rem;
+      text-align: center;
+      border: 2px solid var(--primary-color);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.3) inset;
+      transition: all 0.3s;
+    }
+    
+    .otp-inputs input:focus {
+      outline: none;
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+    
+    /* Remove spinner buttons from number inputs */
+    .otp-inputs input::-webkit-outer-spin-button,
+    .otp-inputs input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    .otp-inputs input[type=number] {
+      -moz-appearance: textfield;
+    }
+    
+    .slot-machine {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 40px;
+      perspective: 1000px;
+    }
+    
+    .slot {
+      width: 70px;
+      height: 90px;
+      background: var(--slot-bg);
+      border: 4px solid var(--slot-border);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    }
+    
+    .slot-window {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.9) 100%);
+    }
+    
+    .slot-inner {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      transition: transform 3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+    
+    .digit {
+      height: 90px;
+      width: 70px;
+      line-height: 90px;
+      font-size: 3rem;
+      font-weight: bold;
+      text-align: center;
+      color: white;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+      background: linear-gradient(to bottom, #444, #333, #222);
+    }
+    
+    .digit:nth-child(even) {
+      background: linear-gradient(to bottom, #333, #222, #111);
+    }
+    
+    .digit.special {
+      color: var(--primary-color);
+    }
+    
+    .machine-case {
+      position: relative;
+      border: 8px solid #832a0d;
+      border-radius: 20px;
+      padding: 20px;
+      background: linear-gradient(to bottom, #5a1907, #3a1105);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      margin-bottom: 30px;
+    }
+    
+    .machine-top {
+      position: absolute;
+      top: -15px;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: linear-gradient(to right, #832a0d, #b33e11, #832a0d);
+      border-radius: 10px 10px 0 0;
+    }
+    
+    .machine-bottom {
+      position: absolute;
+      bottom: -15px;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: linear-gradient(to right, #832a0d, #b33e11, #832a0d);
+      border-radius: 0 0 10px 10px;
+    }
+    
+    .verify-btn {
+      background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+      color: #000;
+      border: none;
+      padding: 12px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s;
+      margin-top: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .verify-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 20px rgba(0, 0, 0, 0.4);
+      background: linear-gradient(to bottom, #ffe44d, #e5c44d);
+    }
+    
+    .verify-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .result-message {
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 20px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.5s;
+      height: 30px;
+    }
+    
+    .result-success {
+      color: var(--success-color);
+    }
+    
+    .result-error {
+      color: var(--error-color);
+    }
+    
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: var(--primary-color);
+      opacity: 0;
+    }
+    
+    .lights {
+      position: absolute;
+      top: -20px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      z-index: -1;
+    }
+    
+    .light {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      box-shadow: 0 0 20px var(--primary-color);
+      animation: blink 1s infinite alternate;
+    }
+    
+    .light:nth-child(odd) {
+      animation-delay: 0.5s;
+    }
+    
+    @keyframes blink {
+      from { opacity: 0.3; }
+      to { opacity: 1; }
+    }
+    
+    .jackpot {
+      position: absolute;
+      top: -60px;
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--primary-color);
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+      width: 100%;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+        width: 90%;
+      }
+      
+      .slot {
+        width: 50px;
+        height: 70px;
+      }
+      
+      .digit {
+        height: 70px;
+        width: 50px;
+        line-height: 70px;
+        font-size: 2.5rem;
+      }
+      
+      .otp-inputs input {
+        width: 45px;
+        height: 55px;
+        font-size: 1.5rem;
+      }
+      
+      .title {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">OTP Verification</h1>
+    <p class="subtitle">Enter your 4-digit code to verify!</p>
+    
+    <div class="otp-inputs">
+      <input type="number" min="0" max="9" maxlength="1" autofocus>
+      <input type="number" min="0" max="9" maxlength="1">
+      <input type="number" min="0" max="9" maxlength="1">
+      <input type="number" min="0" max="9" maxlength="1">
+    </div>
+    
+    <div class="machine-case">
+      <div class="machine-top"></div>
+      <div class="slot-machine">
+        <div class="slot">
+          <div class="slot-window">
+            <div class="slot-inner"></div>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-window">
+            <div class="slot-inner"></div>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-window">
+            <div class="slot-inner"></div>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-window">
+            <div class="slot-inner"></div>
+          </div>
+        </div>
+      </div>
+      <div class="machine-bottom"></div>
+      
+      <div class="lights">
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+      </div>
+      
+      <div class="jackpot">Jackpot!</div>
+    </div>
+    
+    <button class="verify-btn" id="verify-btn">Verify OTP</button>
+    
+    <div class="result-message" id="result-message"></div>
+  </div>
+
+  <script>
+    const slots = document.querySelectorAll('.slot-inner');
+    const inputs = document.querySelectorAll('.otp-inputs input');
+    const verifyBtn = document.getElementById('verify-btn');
+    const resultMessage = document.getElementById('result-message');
+    const jackpotText = document.querySelector('.jackpot');
+    const machineCase = document.querySelector('.machine-case');
+    
+    // Default OTP for testing (in a real app, this would come from your backend)
+    const correctOTP = '1234';
+    
+    // Configure UI on load
+    window.addEventListener('load', () => {
+      setupSlots();
+      setupInputAutoFocus();
+      hideJackpot();
+    });
+    
+    function hideJackpot() {
+      jackpotText.style.opacity = 0;
+    }
+    
+    function showJackpot() {
+      jackpotText.style.opacity = 1;
+      jackpotText.style.animation = 'blink 0.5s infinite alternate';
+    }
+    
+    // Fill slot digits
+    function setupSlots() {
+      slots.forEach(slot => {
+        slot.innerHTML = '';
+        // Add extra digits for smooth looping
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j <= 9; j++) {
+            const digit = document.createElement('div');
+            digit.classList.add('digit');
+            // Add special styling to some digits for visual interest
+            if (j === 7 || j === 0) {
+              digit.classList.add('special');
+            }
+            digit.textContent = j;
+            slot.appendChild(digit);
+          }
+        }
+        
+        // Set initial position
+        slot.style.transform = 'translateY(-900px)';
+      });
+    }
+    
+    // Auto-focus next input
+    function setupInputAutoFocus() {
+      inputs.forEach((input, index) => {
+        input.addEventListener('input', function() {
+          // Keep only 1 digit
+          this.value = this.value.replace(/[^0-9]/g, '').slice(0, 1);
+          
+          // Auto-focus next input
+          if (this.value.length === 1 && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+          }
+        });
+        
+        // Handle backspace
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Backspace' && this.value === '' && index > 0) {
+            inputs[index - 1].focus();
+          }
+        });
+      });
+    }
+    
+    // Animate the slots to spin and land on the entered digits
+    function spinSlots(otpDigits) {
+      const delays = [0, 200, 400, 600]; // Staggered spin start
+      
+      slots.forEach((slot, i) => {
+        setTimeout(() => {
+          const targetDigit = parseInt(otpDigits[i] || '0');
+          
+          // Calculate a random number of full rotations plus the target digit
+          const rotations = 2 + Math.floor(Math.random() * 2); // 2-3 full rotations
+          const finalPosition = -(900 + (targetDigit * 90));
+          
+          // Apply animation
+          slot.style.transition = `transform ${2 + i * 0.3}s cubic-bezier(0.1, 0.7, 0.2, 1)`;
+          slot.style.transform = `translateY(${finalPosition}px)`;
+        }, delays[i]);
+      });
+    }
+    
+    // Create confetti animation for success
+    function createConfetti() {
+      const colors = ['#ffd700', '#ff3333', '#ffffff', '#33ff33', '#3333ff'];
+      const confettiCount = 150;
+      
+      for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.top = '-20px';
+        document.body.appendChild(confetti);
+        
+        // Random sizes
+        const size = Math.random() * 10 + 5;
+        confetti.style.width = `${size}px`;
+        confetti.style.height = `${size}px`;
+        
+        // Random rotation
+        confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+        
+        // Animate
+        setTimeout(() => {
+          confetti.style.transition = `all ${Math.random() * 2 + 3}s ease-out`;
+          confetti.style.transform = `translateY(${window.innerHeight + 100}px) rotate(${Math.random() * 960}deg)`;
+          confetti.style.opacity = '1';
+          
+          // Remove after animation
+          setTimeout(() => {
+            confetti.remove();
+          }, 5000);
+        }, Math.random() * 500);
+      }
+    }
+    
+    // Validate OTP
+    function validateOTP() {
+      const enteredOTP = Array.from(inputs).map(input => input.value || '0').join('');
+      
+      // Start slot machine animation
+      spinSlots(enteredOTP);
+      
+      // Wait for animation to finish before showing result
+      setTimeout(() => {
+        if (enteredOTP === correctOTP) {
+          // Success!
+          resultMessage.textContent = 'Verification Successful!';
+          resultMessage.className = 'result-message result-success';
+          resultMessage.style.opacity = 1;
+          showJackpot();
+          createConfetti();
+          machineCase.style.boxShadow = '0 0 30px rgba(76, 175, 80, 0.7)';
+        } else {
+          // Failed
+          resultMessage.textContent = 'Incorrect OTP. Try again!'; 
+          resultMessage.className = 'result-message result-error';
+          resultMessage.style.opacity = 1;
+          machineCase.style.boxShadow = '0 0 30px rgba(244, 67, 54, 0.7)';
+          
+          // Reset animation after a delay
+          setTimeout(() => {
+            slots.forEach(slot => {
+              slot.style.transition = 'transform 1s ease';
+              slot.style.transform = 'translateY(-900px)';
+            });
+            machineCase.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.8)';
+          }, 2000);
+        }
+      }, 3000);
+    }
+    
+    // Handle verification button click
+    verifyBtn.addEventListener('click', validateOTP);
+    
+    // Reset message when user starts typing new OTP
+    inputs.forEach(input => {
+      input.addEventListener('focus', () => {
+        resultMessage.style.opacity = 0;
+        machineCase.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.8)';
+        hideJackpot();
+      });
+    });
+  </script>
+</body>
+</html>
